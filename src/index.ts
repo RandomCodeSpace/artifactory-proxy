@@ -6,12 +6,12 @@ import path from 'path';
 import fs from 'fs-extra';
 import config from '../config.json';
 
+const router = express.Router()
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(morgan('combined'));
-
 // Ensure cache directory exists
 fs.ensureDirSync(config.cacheDir);
 
@@ -47,7 +47,8 @@ async function tryRepositories(group: string, artifact: string, version: string,
     return null;
 }
 
-app.get('/*', async (req, res) : Promise<any> => {
+const contextPath = config.contextPath || "/"
+router.route('/*').get(async (req, res): Promise<any> => {
     const pathParts = req.path.split('/').filter(p => p);
 
     if (pathParts.length < 4) {
@@ -73,7 +74,7 @@ app.get('/*', async (req, res) : Promise<any> => {
         res.status(500).send('Internal Server Error');
     }
 });
-
+app.use(contextPath, router)
 app.listen(config.port, () => {
-    console.log(`Maven proxy running on http://localhost:${config.port}`);
+    console.log(`Maven proxy running on http://localhost:${config.port}/${contextPath}`);
 });
